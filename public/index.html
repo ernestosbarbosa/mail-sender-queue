@@ -1,0 +1,193 @@
+<html>
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous">
+    </script>
+
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <style>
+        .ql-editor {
+            min-height: 200px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="d-flex align-items-center h-100">
+        <div class="container">
+            <form class="row g-3 form-validation" id="sendMailForm" novalidate onsubmit="event.preventDefault()">
+                <div class="col-md-12">
+                    <label for="hostValidation" class="form-label">Host do Exchange</label>
+                    <input type="text" class="form-control" name="host" id="hostValidation"
+                        placeholder="https://mail.domain.com/ews/exchange.asmx" required>
+                    <div class="invalid-feedback">
+                        Informe o host da conta Exchange
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="emailValidation" class="form-label">Email</label>
+                    <input type="email" class="form-control" name="mailSender" id="emailValidation"
+                        placeholder="email@domain.com" required>
+                    <div class="invalid-feedback">
+                        Informe o seu email
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="passwordValidation" class="form-label">Senha</label>
+                    <input type="password" class="form-control" name="pass" id="passwordValidation" placeholder="******"
+                        required>
+                    <div class="invalid-feedback">
+                        Informe a sua senha
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="nomeEnvioValidation" class="form-label">Nome de Envio</label>
+                    <input type="text" class="form-control" name="fromName" id="nomeEnvioValidation" placeholder="My Name"
+                        required>
+                    <div class="form-text">Nome que aparecerá para o destinatário.</div>
+                    <div class="invalid-feedback">
+                        Informe o nome que aparecerá para o destinatário
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="emailEnvioValidation" class="form-label">Email de Envio</label>
+                    <input type="email" class="form-control" name="fromAddress" id="emailEnvioValidation"
+                        placeholder="email@domain.com" required>
+                    <div class="form-text">Email que aparecerá para o destinatário.</div>
+                    <div class="invalid-feedback">
+                        Informe o email que aparecerá para o destinatário
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <label for="subjectValidation" class="form-label">Assunto</label>
+                    <input type="text" class="form-control" name="subject" id="subjectValidation"
+                        placeholder="Subject" required>
+                    <div class="invalid-feedback">
+                        Informe o assunto do email
+                    </div>
+                </div>
+
+                <div class="col-md-12 h-100">
+                    <label for="bodyValidation" class="form-label">Conteúdo do Email</label>
+                    <textarea class="form-control" name="body" id="bodyValidation" required hidden></textarea>
+                    <div id="bodyValidationEdit"></div>
+                    <div class="invalid-feedback">
+                        Defina a mensagem a ser enviada
+                    </div>
+                </div>
+
+                <div class="col-md-12 h-100">
+                    <label for="emailsValidation" class="form-label">Lista de Emails</label>
+                    <input class="form-control" type="file" name="emails" id="emailsValidation" required>
+                    <div class="form-text">Arquivo CSV com os emails (cabeçalho deve ser <b>email</b>)</div>
+                    <div class="invalid-feedback">
+                        Você deve enviar um arquivo csv com os emails
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <button class="btn btn-primary" type="submit">Enviar Emails</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header d-flex justify-content-center">
+                    <h5 class="modal-title" id="exampleModalLabel">Emails registrados para envio</h5>
+                </div>
+                <div class="modal-body d-flex justify-content-center">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict'
+
+            var forms = document.querySelectorAll('.form-validation')
+
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        } else {
+                            sendMails()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+
+            var quill = new Quill('#bodyValidationEdit', {
+                modules: {
+                    toolbar: [
+                        [{
+                            header: [1, 2, false]
+                        }],
+                        ['bold', 'italic', 'underline'],
+                        ['image', 'code-block']
+                    ]
+                },
+                theme: 'snow'
+            })
+
+            quill.on('text-change', function (delta, oldDelta, source) {
+                quill.getText().trim().length != 0 ? document.getElementById("bodyValidation").value = quill
+                    .root.innerHTML : document.getElementById("bodyValidation").value = ''
+            })
+        })()
+
+        function sendMails() {
+            var formElements = document.getElementById('sendMailForm').elements
+
+            var data = new FormData();
+            data.append("host", formElements['host'].value);
+            data.append("mailSender", formElements['mailSender'].value);
+            data.append("pass", formElements['pass'].value);
+            data.append("fromName", formElements['fromName'].value);
+            data.append("fromAddress", formElements['fromAddress'].value);
+            data.append("subject", formElements['subject'].value);
+            data.append("body", formElements['body'].value);
+
+            data.append("emails", document.getElementById('emailsValidation').files[0], "emails.csv");
+
+            var xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+
+            xhr.addEventListener("readystatechange", function () {
+                if (this.readyState === 4) {
+                    console.log(this.responseText);
+
+                    var modal = new bootstrap.Modal(document.getElementById('modal'))
+                    modal.show()
+
+                }
+            });
+
+            xhr.open("POST", "http://localhost:3000/send-mail");
+
+            xhr.send(data);
+
+        }
+    </script>
+
+</body>
+
+</html>

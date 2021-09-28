@@ -1,0 +1,20 @@
+{
+  "name": "mail-sender-queue",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "ernestosbarbosa",
+  "license": "ISC",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "csvtojson": "^2.0.10",
+    "ews-simple": "git://github.com/ernestosbarbosa/ews-simple#d3cf9323b579738d9ed63f318b0dfce7fe5983a3",
+    "express": "^4.17.1",
+    "multiparty": "^4.2.2",
+    "multiparty-express": "^0.1.9",
+    "node-schedule": "^2.0.0"
+  }
+}
