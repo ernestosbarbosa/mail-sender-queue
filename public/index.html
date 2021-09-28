@@ -181,7 +181,7 @@
                 }
             });
 
-            xhr.open("POST", "http://localhost:3000/send-mail");
+            xhr.open("POST", `${window.location.href}send-mail`);
 
             xhr.send(data);
 
