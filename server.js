@@ -1,22 +1,25 @@
-const { cleanup, multipartyExpress } = require('multiparty-express')
 const express = require('express')
 const { readFileSync, writeFileSync, rmSync, existsSync } = require('fs')
 const csv = require('csvtojson')
 const sendMailQueue = require('./send')
 const { scheduleJob, cancelJob } = require('node-schedule')
+const multer = require('multer')
+const { emptyDirSync } = require('fs-extra')
+const upload = multer({ dest: 'uploads/', limits: { fieldSize: 20971520 } })
 
 const app = express()
 const port = 8090
 
-app.post('/send-mail', multipartyExpress(), (req, res, next) => {
-    let mailSender = req.fields.mailSender[0]
-    let pass = req.fields.pass[0]
-    let host = req.fields.host[0]
-    let subject = req.fields.subject[0]
-    let fromName = req.fields.fromName[0]
-    let fromAddress = req.fields.fromAddress[0]
-    let body = req.fields.body[0]
-    let emails = readFileSync(req.files['emails'][0].path).toString()
+app.post('/send-mail', upload.single('emails'), (req, res) => {
+
+    let mailSender = req.body.mailSender
+    let pass = req.body.pass
+    let host = req.body.host
+    let subject = req.body.subject
+    let fromName = req.body.fromName
+    let fromAddress = req.body.fromAddress
+    let body = req.body.body
+    let emails = readFileSync(req.file.path).toString()
 
     csv().fromString(emails).then(jsonObj => {
         jsonObj.forEach(el => {
@@ -29,7 +32,6 @@ app.post('/send-mail', multipartyExpress(), (req, res, next) => {
     res.send({
         message: 'Sua lista de emails será enviada'
     })
-    cleanup(req);
 
     scheduleJob('sendMail', '* * * * *', () => {
         sendMailQueue(mailSender, pass, host, subject, fromName, fromAddress).then((res) => {
@@ -38,12 +40,13 @@ app.post('/send-mail', multipartyExpress(), (req, res, next) => {
                     rmSync('./body.html')
                 if (existsSync('./emails.json'))
                     rmSync('./emails.json')
+                if (existsSync('./uploads'))
+                    emptyDirSync('./uploads')
                 cancelJob('sendMail')
                 console.log('finish')
             }
         })
     })
-
 
 })
 

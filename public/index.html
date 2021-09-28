@@ -9,11 +9,20 @@
 
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/xml.min.js"></script>
+    <script src="https://unpkg.com/quill-html-edit-button@2.2.7/dist/quill.htmlEditButton.min.js"></script>
+
     <style>
         .ql-editor {
             min-height: 200px;
             max-height: 400px;
             overflow: auto;
+        }
+        button[title="Show HTML source"]{
+            padding: 0 !important;
+            margin-top: -2px;
         }
     </style>
 
@@ -52,8 +61,8 @@
 
                 <div class="col-md-6">
                     <label for="nomeEnvioValidation" class="form-label">Nome de Envio</label>
-                    <input type="text" class="form-control" name="fromName" id="nomeEnvioValidation" placeholder="My Name"
-                        required>
+                    <input type="text" class="form-control" name="fromName" id="nomeEnvioValidation"
+                        placeholder="My Name" required>
                     <div class="form-text">Nome que aparecerá para o destinatário.</div>
                     <div class="invalid-feedback">
                         Informe o nome que aparecerá para o destinatário
@@ -72,8 +81,8 @@
 
                 <div class="col-md-12">
                     <label for="subjectValidation" class="form-label">Assunto</label>
-                    <input type="text" class="form-control" name="subject" id="subjectValidation"
-                        placeholder="Subject" required>
+                    <input type="text" class="form-control" name="subject" id="subjectValidation" placeholder="Subject"
+                        required>
                     <div class="invalid-feedback">
                         Informe o assunto do email
                     </div>
@@ -137,15 +146,24 @@
                     }, false)
                 })
 
+            Quill.register("modules/htmlEditButton", htmlEditButton);
             var quill = new Quill('#bodyValidationEdit', {
                 modules: {
                     toolbar: [
                         [{
-                            header: [1, 2, false]
+                            header: [1, 2, 3, false]
                         }],
                         ['bold', 'italic', 'underline'],
-                        ['image', 'code-block']
-                    ]
+                        [{
+                            list: "ordered"
+                        }, {
+                            list: "bullet"
+                        }],
+                        ['image']
+                    ],
+                    htmlEditButton: {
+                        syntax: false
+                    }
                 },
                 theme: 'snow'
             })
@@ -154,6 +172,7 @@
                 quill.getText().trim().length != 0 ? document.getElementById("bodyValidation").value = quill
                     .root.innerHTML : document.getElementById("bodyValidation").value = ''
             })
+
         })()
 
         function sendMails() {
